@@ -1,5 +1,5 @@
 [project]
-name = "tdt4265-snow-poles"
+name = "snowpole-detector"
 version = "0.1.0"
 description = "Snow pole detection - TDT4265 mini project"
 requires-python = ">=3.10"
@@ -15,6 +15,8 @@ dependencies = [
     "pydantic-settings",
     "pydantic",
     "typer",
+    "ultralytics",
+    "albumentationsx",
 ]
 
 [project.optional-dependencies]
@@ -23,6 +25,9 @@ dev = [
     "mypy",
     "pre-commit",
     "types-Pillow",            # mypy stubs for Pillow
+    "pandas",
+    "pandas-stubs",
+    "seaborn",
 ]
 
 [build-system]

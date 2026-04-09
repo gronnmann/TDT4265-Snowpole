@@ -1,3 +1,10 @@
 .idea
 *.egg-info
 .venv
+*.png
+dataset-augmented
+dataset-processed
+build
+*.pt
+runs/
+__pycache__
