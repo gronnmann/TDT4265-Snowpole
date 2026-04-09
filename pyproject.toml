@@ -1,0 +1,54 @@
+[project]
+name = "tdt4265-snow-poles"
+version = "0.1.0"
+description = "Snow pole detection - TDT4265 mini project"
+requires-python = ">=3.10"
+
+dependencies = [
+    "torch",
+    "torchvision",
+    "ultralytics",
+    "numpy",
+    "matplotlib",
+    "pillow",
+    "opencv-python",
+    "pydantic-settings",
+    "pydantic",
+    "typer",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff",
+    "mypy",
+    "pre-commit",
+    "types-Pillow",            # mypy stubs for Pillow
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+warn_unused_ignores = true
+warn_return_any = true
+ignore_missing_imports = false
+files = ["snowpole-detector"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.ruff]
+select = ["E", "F", "I", "UP", "SIM", "B"]
+exclude = ["tests", "alembic"]
+ignore = ["E501"] # Line too long -> formatter fixes
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"
