@@ -15,7 +15,44 @@ def get_augmentation_pipeline() -> A.Compose:
             A.MotionBlur(p=0.2),
             A.GaussianBlur(blur_limit=(3, 7), p=0.3),
             A.Blur(blur_limit=3, p=0.1),
+            A.Defocus(radius=(1, 3), p=0.2),
         ], p=0.4),
+
+        A.OneOf([
+            A.RandomRain(
+                slant_range=(-10, 10),
+                drop_length=10,
+                drop_width=1,
+                blur_value=3,
+                p=0.3
+            ),
+            A.RandomSnow(
+                snow_point_range=(0.1, 0.3),
+                brightness_coeff=1.5,
+                p=0.4
+            ),
+            A.RandomFog(
+                fog_coef_range=(0.1, 0.3),
+                alpha_coef=0.1,
+                p=0.3
+            ),
+        ], p=0.4),
+
+        A.OneOf([
+            A.RandomShadow(
+                shadow_roi=(0, 0, 1, 1),
+                num_shadows_limit=(1, 2),
+                shadow_dimension=5,
+                p=0.3
+            ),
+            A.RandomSunFlare(
+                flare_roi=(0, 0, 1, 0.5),
+                angle_range=(0, 1),
+                src_radius=100,
+                p=0.2
+            ),
+            A.RandomToneCurve(scale=0.2, p=0.3),
+        ], p=0.3),
 
         # Mean brightness is low (93.8/255)
         A.RandomBrightnessContrast(
@@ -35,8 +72,22 @@ def get_augmentation_pipeline() -> A.Compose:
         A.ShiftScaleRotate(
             shift_limit=0.1625,
             scale_limit=0.3,
-            rotate_limit=35,
+            rotate_limit=15,
             p=0.5
+        ),
+
+        A.OneOf([
+            A.ImageCompression(quality_range=(60, 100), p=0.3),
+            A.GaussNoise(p=0.3),
+            A.ISONoise(color_shift=(0.01, 0.05), intensity=(0.1, 0.5), p=0.2),
+        ], p=0.3),
+
+        A.CoarseDropout(
+            num_holes_range=(1, 4),
+            hole_height_range=(50, 100),
+            hole_width_range=(50, 100),
+            fill="inpaint_ns",
+            p=0.2
         ),
     ], bbox_params=A.BboxParams(
         coord_format="yolo",
@@ -84,6 +135,9 @@ def process_augmentation(source_dir: Path, output_dir: Path, multiplier: int = 3
                             class_labels.append(int(parts[0]))
                             bboxes.append(parts[1:])
 
+                shutil.copy(img_path, img_out / img_path.name) # save original
+                if label_path.exists():
+                    shutil.copy(label_path, lbl_out / label_path.name)
                 for i in range(multiplier):
                     transformed = transform(image=image, bboxes=bboxes, class_labels=class_labels)
 
@@ -108,6 +162,8 @@ def process_augmentation(source_dir: Path, output_dir: Path, multiplier: int = 3
 
 
 def main(multiplier: int = 4):
+
+    print(f"Doing augmentations with multiplier: {multiplier}")
     settings = get_settings()
 
     ds_in = settings.DATASET_RESULTS
