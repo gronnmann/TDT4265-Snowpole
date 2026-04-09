@@ -1,6 +1,6 @@
 from ultralytics import YOLO
 
-model = YOLO("yolo11s.pt") 
+model = YOLO("yolo11s.pt")
 
 model.train(
     data="dataset-augmented/data.yaml",
@@ -10,7 +10,7 @@ model.train(
     device=0,
     rect=True,
     mosaic=1.0,
-    close_mosaic=10 ,
-    project="TDT4265-Snowpole", # wandb?
+    close_mosaic=10,
+    project="TDT4265-Snowpole",  # wandb?
     save_period=50,
 )

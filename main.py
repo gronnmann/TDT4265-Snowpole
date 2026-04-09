@@ -1,7 +1,7 @@
 import typer
 
 
-def entrypoint(person: str):
+def entrypoint(person: str) -> None:
     print(f"Hello, {person}!")
 
 

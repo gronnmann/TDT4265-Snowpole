@@ -2,7 +2,7 @@
 name = "snowpole-detector"
 version = "0.1.0"
 description = "Snow pole detection - TDT4265 mini project"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 
 dependencies = [
     "torch",
@@ -15,7 +15,6 @@ dependencies = [
     "pydantic-settings",
     "pydantic",
     "typer",
-    "ultralytics",
     "albumentationsx",
 ]
 
@@ -24,7 +23,7 @@ dev = [
     "ruff",
     "mypy",
     "pre-commit",
-    "types-Pillow",            # mypy stubs for Pillow
+    "types-Pillow",
     "pandas",
     "pandas-stubs",
     "seaborn",
@@ -35,23 +34,40 @@ requires = ["setuptools>=68"]
 
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.12"
 strict = true
 warn_unused_ignores = true
 warn_return_any = true
 ignore_missing_imports = false
-files = ["snowpole-detector"]
+files = ["snowpole_detector", "main.py"]
+
+[[tool.mypy.overrides]]
+# cv2/albumentations/torch ship no stubs — treat as Any
+module = ["cv2", "albumentations", "albumentations.*", "torch", "torch.*", "torchvision", "torchvision.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# ultralytics has partial stubs that cause attr-defined / not-iterable false positives;
+# skip it entirely so all its symbols are treated as Any
+module = ["ultralytics", "ultralytics.*"]
+ignore_missing_imports = true
+follow_imports = "skip"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
 
 [tool.ruff]
-select = ["E", "F", "I", "UP", "SIM", "B"]
-exclude = ["tests", "alembic"]
-ignore = ["E501"] # Line too long -> formatter fixes
 line-length = 100
 target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "SIM", "B"]
+exclude = ["tests", "alembic"]
+ignore = [
+    "E501",  # Line too long — formatter handles this
+    "B008",  # typer.Option/Argument in function defaults is the recommended typer pattern
+]
 
 [tool.ruff.format]
 quote-style = "double"
