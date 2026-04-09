@@ -26,7 +26,14 @@ def _zip_labels(labels_dir: Path, output_dir: Path) -> Path:
     return zip_path
 
 
-def predict_normal(model: YOLO, test_dir: Path, output_dir: Path) -> Path:
+def predict_normal(
+    model: YOLO,
+    test_dir: Path,
+    output_dir: Path,
+    conf: float = 0.25,
+    iou: float = 0.7,
+    tta: bool = True,
+) -> Path:
     """
     Run inference directly on full images using Ultralytics predict.
     Returns the labels directory.
@@ -38,11 +45,21 @@ def predict_normal(model: YOLO, test_dir: Path, output_dir: Path) -> Path:
         save_txt=True,
         save_conf=True,
         exist_ok=True,
+        conf=conf,
+        iou=iou,
+        augment=tta,  # TTA: runs flipped/scaled variants and merges predictions
     )
     return output_dir / "labels_raw" / "labels"
 
 
-def predict_split(model: YOLO, test_dir: Path, output_dir: Path) -> Path:
+def predict_split(
+    model: YOLO,
+    test_dir: Path,
+    output_dir: Path,
+    conf: float = 0.25,
+    iou: float = 0.7,
+    tta: bool = True,
+) -> Path:
     """
     Split each image into left/right halves, run inference on each half, then remap
     detections back to full-image YOLO coordinates.
@@ -71,28 +88,32 @@ def predict_split(model: YOLO, test_dir: Path, output_dir: Path) -> Path:
         left_arr = np.array(img.crop((0, 0, W // 2, H)))
         right_arr = np.array(img.crop((W // 2, 0, W, H)))
 
-        left_results = model.predict(source=left_arr, verbose=False)[0]
-        right_results = model.predict(source=right_arr, verbose=False)[0]
+        left_results = model.predict(
+            source=left_arr, conf=conf, iou=iou, augment=tta, verbose=False
+        )[0]
+        right_results = model.predict(
+            source=right_arr, conf=conf, iou=iou, augment=tta, verbose=False
+        )[0]
 
         detections: list[tuple[int, float, float, float, float, float]] = []
 
         if left_results.boxes is not None and len(left_results.boxes):
             for box in left_results.boxes:
                 cls = int(box.cls[0])
-                conf = float(box.conf[0])
+                conf_val = float(box.conf[0])
                 x_c, y_c, w, h = box.xywhn[0].tolist()
-                detections.append((cls, x_c / 2, y_c, w / 2, h, conf))
+                detections.append((cls, x_c / 2, y_c, w / 2, h, conf_val))
 
         if right_results.boxes is not None and len(right_results.boxes):
             for box in right_results.boxes:
                 cls = int(box.cls[0])
-                conf = float(box.conf[0])
+                conf_val = float(box.conf[0])
                 x_c, y_c, w, h = box.xywhn[0].tolist()
-                detections.append((cls, 0.5 + x_c / 2, y_c, w / 2, h, conf))
+                detections.append((cls, 0.5 + x_c / 2, y_c, w / 2, h, conf_val))
 
         with open(labels_dir / f"{img_path.stem}.txt", "w") as f:
-            for cls, x_c, y_c, w, h, conf in detections:
-                f.write(f"{cls} {x_c:.6f} {y_c:.6f} {w:.6f} {h:.6f} {conf:.6f}\n")
+            for cls, x_c, y_c, w, h, conf_val in detections:
+                f.write(f"{cls} {x_c:.6f} {y_c:.6f} {w:.6f} {h:.6f} {conf_val:.6f}\n")
 
         print(f"  {img_path.name}: {len(detections)} detection(s)")
 
@@ -118,6 +139,18 @@ def run_inference(
         Path | None,
         typer.Option(help="Output directory (default: settings.INFERENCE_OUTPUT)"),
     ] = None,
+    conf: Annotated[
+        float,
+        typer.Option(help="Confidence threshold for detections (use tune-threshold to find optimal)"),
+    ] = 0.25,
+    iou: Annotated[
+        float,
+        typer.Option(help="IoU threshold for NMS"),
+    ] = 0.7,
+    tta: Annotated[
+        bool,
+        typer.Option(help="Enable Test-Time Augmentation (runs flipped/scaled variants and merges)"),
+    ] = True,
     zip_output: Annotated[
         bool,
         typer.Option(help="Create submission.zip from label files"),
@@ -135,13 +168,14 @@ def run_inference(
     print(f"Model          : {resolved_model_path}")
     print(f"Test dir       : {resolved_test_dir}")
     print(f"Output dir     : {resolved_output_dir}")
+    print(f"conf={conf}  iou={iou}  tta={tta}")
 
     yolo_model = YOLO(str(resolved_model_path))
 
     if mode == InferenceMode.normal:
-        labels_dir = predict_normal(yolo_model, resolved_test_dir, resolved_output_dir)
+        labels_dir = predict_normal(yolo_model, resolved_test_dir, resolved_output_dir, conf, iou, tta)
     else:
-        labels_dir = predict_split(yolo_model, resolved_test_dir, resolved_output_dir)
+        labels_dir = predict_split(yolo_model, resolved_test_dir, resolved_output_dir, conf, iou, tta)
 
     if zip_output:
         _zip_labels(labels_dir, resolved_output_dir)

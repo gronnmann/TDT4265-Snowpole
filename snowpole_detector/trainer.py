@@ -11,6 +11,7 @@ model.train(
     rect=True,
     mosaic=1.0,
     close_mosaic=10,
+    box=10.0,  # increase box loss for stats
     project="TDT4265-Snowpole",  # wandb?
     save_period=50,
 )
