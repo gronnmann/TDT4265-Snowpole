@@ -10,6 +10,10 @@ class Settings(BaseSettings):
 
     DATASET_AUGMENTOR_RESULTS: Path = "./dataset-augmented/"
 
+    # Inference settings
+    MODEL_PATH: Path = "./runs/detect/train/weights/best.pt"
+    TEST_DIR: Path = "/datasets/tdt4265/Poles2025/rgb/test/images"
+    INFERENCE_OUTPUT: Path = "./inference-output/"
 
     model_config = SettingsConfigDict(
         env_file=".env",
