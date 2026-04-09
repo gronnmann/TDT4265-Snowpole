@@ -12,7 +12,7 @@ class Settings(BaseSettings):
 
     # Inference settings
     MODEL_PATH: Path = "./runs/detect/train/weights/best.pt"
-    TEST_DIR: Path = "/datasets/tdt4265/Poles2025/rgb/test/images"
+    TEST_DIR: Path = "/datasets/tdt4265/Poles2025/roadpoles_v1/test/images"
     INFERENCE_OUTPUT: Path = "./inference-output/"
 
     model_config = SettingsConfigDict(
