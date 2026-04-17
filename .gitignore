@@ -1,3 +1,4 @@
+.pole_cache
 .idea
 *.egg-info
 .venv
@@ -8,3 +9,12 @@ build
 *.pt
 runs/
 __pycache__
+_models/
+ds.zip
+ds-v0/
+output/
+inference-output
+*.zip
+.env
+acdc_dataset
+*.pth

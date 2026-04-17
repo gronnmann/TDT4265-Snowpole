@@ -70,7 +70,7 @@ def get_augmentation_pipeline() -> A.Compose:
             A.HueSaturationValue(
                 hue_shift_limit=20,
                 sat_shift_limit=30,
-                val_shift_limit=50,
+                val_shift_limit=20,
                 p=0.5,
             ),
             # Keep poles mostly vertical
@@ -97,9 +97,11 @@ def get_augmentation_pipeline() -> A.Compose:
             ),
         ],
         bbox_params=A.BboxParams(
-            coord_format="yolo",
+            format="yolo",
+            # coord_format="yolo",
             label_fields=["class_labels"],
             min_visibility=0.3,
+            clip=True,
         ),
     )
 
@@ -108,13 +110,17 @@ def process_augmentation(source_dir: Path, output_dir: Path, multiplier: int = 3
     transform = get_augmentation_pipeline()
 
     for subset in ["train", "valid"]:
-        img_in = source_dir / "images" / subset
-        lbl_in = source_dir / "labels" / subset
-        img_out = output_dir / "images" / subset
-        lbl_out = output_dir / "labels" / subset
+        img_in = source_dir / subset / "images"
+        lbl_in = source_dir / subset / "labels"
+        img_out = output_dir / subset / "images"
+        lbl_out = output_dir / subset / "labels"
 
         img_out.mkdir(parents=True, exist_ok=True)
         lbl_out.mkdir(parents=True, exist_ok=True)
+
+        yaml_file = source_dir / "data.yaml"
+        yaml_out = output_dir / "data.yaml"
+        shutil.copyfile(yaml_file, yaml_out)
 
         if not img_in.exists():
             continue
@@ -173,7 +179,7 @@ def process_augmentation(source_dir: Path, output_dir: Path, multiplier: int = 3
 def main(multiplier: int = 4) -> None:
     print(f"Doing augmentations with multiplier: {multiplier}")
     settings = get_settings()
-    process_augmentation(settings.DATASET_RESULTS, settings.DATASET_AUGMENTOR_RESULTS, multiplier)
+    process_augmentation(settings.DATASET_PREPROCESS_PATH, settings.DATASET_FINISHED_YOLO, multiplier)
     print("Augmentation complete.")
 
 

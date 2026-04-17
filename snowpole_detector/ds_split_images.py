@@ -1,3 +1,4 @@
+import shutil
 from pathlib import Path
 from typing import TypedDict
 
@@ -154,17 +155,21 @@ def split_image_and_labels(
 def process_dataset() -> None:
     """Process entire YOLO dataset, splitting train/valid images horizontally."""
     settings = get_settings()
-    dir_in = settings.DATASET_SOURCE
-    dir_out = settings.DATASET_RESULTS
+    dir_in = settings.DATASET_BASE_PATH
+    dir_out = settings.DATASET_PREPROCESS_PATH
     dir_out.mkdir(parents=True, exist_ok=True)
 
     for subset in ["train", "valid"]:
-        img_dir = dir_in / "images" / subset
-        label_dir = dir_in / "labels" / subset
-        out_img_dir = dir_out / "images" / subset
-        out_label_dir = dir_out / "labels" / subset
+        img_dir = dir_in / subset / "images"
+        label_dir = dir_in / subset /"labels"
+        out_img_dir = dir_out / subset /"images"
+        out_label_dir = dir_out / subset /"labels"
         out_img_dir.mkdir(parents=True, exist_ok=True)
         out_label_dir.mkdir(parents=True, exist_ok=True)
+
+        yaml_file = dir_in / "data.yaml"
+        yaml_out = dir_out / "data.yaml"
+        shutil.copyfile(yaml_file, yaml_out)
 
         for img_file in img_dir.iterdir():
             if img_file.suffix.lower() not in {".jpg", ".jpeg", ".png"}:

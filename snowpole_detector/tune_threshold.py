@@ -113,8 +113,8 @@ def main(
     settings = get_settings()
 
     resolved_model = model_path or settings.MODEL_PATH
-    resolved_val_dir = val_dir or (settings.DATASET_AUGMENTOR_RESULTS / "images" / "valid")
-    resolved_labels_dir = labels_dir or (settings.DATASET_AUGMENTOR_RESULTS / "labels" / "valid")
+    resolved_val_dir = val_dir or (settings.DATASET_PREPROCESS_PATH / "valid" / "images")
+    resolved_labels_dir = labels_dir or (settings.DATASET_PREPROCESS_PATH / "valid" / "labels")
 
     print(f"Model      : {resolved_model}")
     print(f"Val images : {resolved_val_dir}")
